@@ -4,11 +4,9 @@ use scip::{
     self,
     types::{Document, Index, Metadata, Occurrence, SymbolInformation, ToolInfo},
 };
-use serde::{Deserialize, Serialize, __private::doc};
-use serde_json::Result;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    env::args,
     fs,
     path::{Path, PathBuf},
     process::exit,
@@ -42,6 +40,27 @@ struct CTagsEntry {
     #[serde(rename = "scopeKind")]
     scope_kind: Option<String>,
     roles: String,
+}
+
+fn contains_bad_chars(string: &str) -> bool {
+    for c in string.chars() {
+        match c {
+            '/' | '#' | '.' | ':' | '!' | '(' | ')' | '[' | ']' => return true,
+            _ => {}
+        }
+    }
+    false
+}
+
+fn emit_name_maybe_escape(string: &mut String, name: &str) {
+    let cbc = contains_bad_chars(name);
+    if cbc {
+        string.push('`');
+    }
+    string.push_str(name);
+    if cbc {
+        string.push('`');
+    }
 }
 
 fn main() {
@@ -96,11 +115,23 @@ fn main() {
             panic!("Why is this not a definition? {}", line);
         }
 
+        // TODO(SuperAuguste): Use scope information - everything is advertised as top-level global atm
         let mut symbol = String::from("file no_package_manager no_package no_version ");
-        symbol.push_str(&relative_path);
-        symbol.push('/');
-        symbol.push_str(&entry.name);
-        symbol.push('.');
+        for segment in relative_path.split("/") {
+            emit_name_maybe_escape(&mut symbol, segment);
+            symbol.push('/');
+        }
+        emit_name_maybe_escape(&mut symbol, &entry.name);
+        // TODO(SuperAuguste): Add more cases
+        match entry.kind.as_str() {
+            "function" => {
+                symbol.push('(');
+                symbol.push_str(entry.line.to_string().as_str());
+                symbol.push(')');
+                symbol.push('.');
+            }
+            &_ => symbol.push('.'),
+        }
 
         println!("{}", symbol);
 
