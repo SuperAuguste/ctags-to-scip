@@ -1,0 +1,4 @@
+/target
+*.scip
+*_tags*
+scip-snapshot
