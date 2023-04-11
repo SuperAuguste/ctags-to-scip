@@ -29,15 +29,15 @@ struct Args {
 
 #[derive(Serialize, Deserialize)]
 struct CTagsEntry {
-    /// TODO: Handle _type != tag
+    /// TODO(SuperAuguste): Handle _type != tag
     name: String,
     path: PathBuf,
     pattern: String,
     language: String,
     line: i32,
-    /// TODO: Use enum
+    /// TODO(SuperAuguste): Use enum
     kind: String,
-    /// TODO: Use enum
+    /// TODO(SuperAuguste): Use enum
     scope: Option<String>,
     #[serde(rename = "scopeKind")]
     scope_kind: Option<String>,
@@ -82,7 +82,7 @@ fn main() {
                 documents.insert(
                     relative_path.clone(),
                     Document {
-                        // TODO: Map this to SCIP language names
+                        // TODO(SuperAuguste): Map this to SCIP language names
                         language: entry.language,
                         relative_path: relative_path.clone(),
                         ..Default::default()
@@ -96,7 +96,11 @@ fn main() {
             panic!("Why is this not a definition? {}", line);
         }
 
-        let symbol = String::from("bruh");
+        let mut symbol = String::from("file no_package_manager no_package no_version ");
+        symbol.push_str(&relative_path);
+        symbol.push('/');
+        symbol.push_str(&entry.name);
+        symbol.push('.');
 
         println!("{}", symbol);
 
@@ -105,12 +109,12 @@ fn main() {
             ..Default::default()
         });
 
-        // TODO: Run regex on line to obtain character position
-        // TODO: match syntax kind
+        // TODO(SuperAuguste): Run regex on line to obtain character position
+        // TODO(SuperAuguste): match syntax kind
         document.occurrences.push(Occurrence {
-            range: vec![entry.line, 0, 0],
+            range: vec![entry.line - 1, 0, 0],
             symbol: symbol.clone(),
-            symbol_roles: 0,
+            symbol_roles: 1,
             syntax_kind: EnumOrUnknown::from(scip::types::SyntaxKind::UnspecifiedSyntaxKind),
             ..Default::default()
         })
